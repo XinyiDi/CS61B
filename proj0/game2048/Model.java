@@ -2,6 +2,10 @@ package game2048;
 
 import java.util.Formatter;
 import java.util.Observable;
+import java.util.ArrayList;
+import java.util.List;
+
+import static game2048.Side.NORTH;
 
 
 /** The state of a game of 2048.
@@ -94,6 +98,52 @@ public class Model extends Observable {
         setChanged();
     }
 
+
+    public boolean moveTileUpAsFarAsPossible(int x, int y, List mergedTiles){
+        Tile t = board.tile(x, y);
+
+        if (t == null){
+            return false;
+        }
+        for (int row = y + 1; row < board.size(); row++){
+            Tile curr = board.tile(x, row);
+            boolean containsCurr = mergedTiles.contains(curr);
+            //System.out.println(row +" and "+t +" and "+curr +" and "+mergedTiles+ " and "+ containsCurr);
+
+            if (curr == null){
+                if (row == board.size() - 1){
+                    board.move(x, row, t);
+                    return true;
+                }
+            } else if (curr.value() == t.value() & containsCurr == false){
+                    // merge operation
+                    board.move(x, row, t);
+                    //System.out.println(board.tile(x, row));
+                    mergedTiles.add(board.tile(x, row));
+                    //System.out.println(curr);
+                    score += t.value()*2;
+                    return true;
+            } else {
+                if (curr != t) {
+                    board.move(x, row - 1, t);
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+    public boolean tiltColumn(int x, List mergedTiles){
+        boolean changed;
+        changed = false;
+        for (int row = board.size() - 1; row >= 0; row -= 1){
+            boolean if_changed = moveTileUpAsFarAsPossible(x, row, mergedTiles);
+            if (if_changed){
+                changed = true;
+            }
+        }
+        return changed;
+    }
+
     /** Tilt the board toward SIDE. Return true iff this changes the board.
      *
      * 1. If two Tile objects are adjacent in the direction of motion and have
@@ -115,6 +165,19 @@ public class Model extends Observable {
         // changed local variable to true.
 
         checkGameOver();
+
+        List<Tile> mergedTiles = new ArrayList<>();
+        board.setViewingPerspective(side);
+        for (int col =  0; col < board.size(); col += 1){
+            boolean if_changed = tiltColumn(col,mergedTiles);
+            if (if_changed){
+                changed = true;
+            }
+
+        }
+        board.setViewingPerspective(NORTH);
+
+
         if (changed) {
             setChanged();
         }
@@ -138,6 +201,13 @@ public class Model extends Observable {
      * */
     public static boolean emptySpaceExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null){
+                    return true;
+                }
+            }
+        }
         return false;
     }
 
@@ -148,8 +218,18 @@ public class Model extends Observable {
      */
     public static boolean maxTileExists(Board b) {
         // TODO: Fill in this function.
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null) {
+
+                } else if (b.tile(i, j).value() == MAX_PIECE){
+                    return true;
+                }
+            }
+        }
         return false;
     }
+
 
     /**
      * Returns true if there are any valid moves on the board.
@@ -159,6 +239,31 @@ public class Model extends Observable {
      */
     public static boolean atLeastOneMoveExists(Board b) {
         // TODO: Fill in this function.
+        // Check empty tile
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size(); j++){
+                if (b.tile(i, j) == null) {
+                    return true;
+                }
+            }
+        }
+
+        // Check horizontal adjacent tiles
+        for (int i = 0; i < b.size(); i++) {
+            for (int j = 0; j < b.size() - 1; j++){
+                if (b.tile(i, j).value() == b.tile(i, j+1).value()) {
+                    return true;
+            }
+        }}
+        // Check horizontal adjacent tiles and empty tile
+        for (int i = 0; i < b.size(); i++){
+            for (int j = 0; j < b.size() - 1; j++){
+                if (b.tile(j, i).value() == b.tile(j+1, i).value()) {
+                    return true;
+                }
+            }
+        }
+
         return false;
     }
 

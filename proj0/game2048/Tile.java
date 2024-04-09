@@ -5,6 +5,7 @@ package game2048;
  */
 public class Tile {
 
+
     /** A new tile with VALUE as its value at (ROW, COL).  This
      *  constructor is private, so all tiles are created by the
      *  factory methods create, move, and merge. */
@@ -55,6 +56,7 @@ public class Tile {
         next = otherTile.next = new Tile(2 * value, col, row);
         return next;
     }
+
 
     /** Return the distance in rows or columns between me and my successor
      *  tile (0 if I have no successor). */
